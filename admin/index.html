@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Kofix Photography Studio · Music Admin</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="theme-color" content="#160b19">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--pink:#ff8da8;--rose:#e94e7c;--gold:#f7d99a;--dark:#160b19}
+body{font-family:Montserrat,Arial,sans-serif;background:radial-gradient(ellipse at 20% 0,#4a1e3a,transparent 55%),#160b19;color:#fff5f7;min-height:100vh;padding:20px}
+.wrap{max-width:760px;margin:0 auto}
+header{display:flex;align-items:center;gap:12px;margin:10px 0 26px}
+header img{height:36px}
+header b{letter-spacing:5px;color:var(--gold);display:block;font-size:17px}
+header small{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#d9bfcb}
+h1{font:400 26px Georgia,serif;margin-bottom:6px}
+p.sub{color:#e0cbd7;font-size:14px;line-height:1.7;margin-bottom:20px}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(255,174,196,.25);border-radius:18px;padding:20px;margin-bottom:18px}
+input[type=password],input[type=text]{width:100%;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,174,196,.35);background:rgba(0,0,0,.3);color:#fff;font:inherit}
+button,.btn{padding:12px 20px;border-radius:30px;border:1px solid var(--pink);background:rgba(233,78,124,.3);color:#fff;font:600 13px Montserrat,Arial,sans-serif;cursor:pointer;transition:.2s}
+button:hover{background:var(--rose)}
+button.sm{padding:7px 13px;font-size:12px}
+button.ghost{background:transparent;border-color:rgba(255,255,255,.3)}
+button.danger{border-color:#ff6b6b;background:rgba(255,107,107,.15)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.drop{border:2px dashed rgba(247,217,154,.5);border-radius:16px;padding:30px 16px;text-align:center;cursor:pointer;transition:.2s}
+.drop.over{background:rgba(247,217,154,.1);border-color:var(--gold)}
+.drop b{color:var(--gold)}
+.msg{font-size:13px;margin-top:10px;min-height:1.4em}
+.err{color:#ff9b9b}.ok{color:#8ff0b5}
+.track{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid rgba(255,255,255,.08);flex-wrap:wrap}
+.track:first-child{border-top:0}
+.track .t{flex:1;min-width:150px}
+.track .t b{font-weight:600;font-size:14px;display:block;word-break:break-word}
+.track .t small{color:#b99bab;font-size:11px}
+.tag{font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:rgba(247,217,154,.15);color:var(--gold)}
+.off{opacity:.5}
+.bar{height:6px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--gold));transition:width .2s}
+.up{padding:8px 0;font-size:13px}
+.hidden{display:none!important}
+audio{width:100%;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="/images/logo-gold.png" alt="Kofix logo">
+    <div><b>KOFIX</b><small>Photography Studio · Admin</small></div>
+  </header>
+
+  <!-- login -->
+  <section id="loginBox" class="card">
+    <h1>Music admin</h1>
+    <p class="sub">Sign in to upload and manage the background music for your website.</p>
+    <form id="loginForm" class="row" autocomplete="on">
+      <input type="password" id="pw" placeholder="Admin password" autocomplete="current-password" required style="flex:1;min-width:200px">
+      <button type="submit">Sign in</button>
+    </form>
+    <p class="msg" id="loginMsg"></p>
+  </section>
+
+  <!-- dashboard -->
+  <div id="dash" class="hidden">
+    <section class="card">
+      <div class="row" style="justify-content:space-between"><h1>Upload music</h1><button class="ghost sm" id="logout">Sign out</button></div>
+      <p class="sub">Choose several songs at once. Once uploaded, they join the automatic rotation on your website (a new song every 60 seconds). Visitors never see a player.</p>
+      <label class="drop" id="drop">
+        <b>Tap to choose music files</b><br><small style="color:#d9bfcb">or drag and drop here · mp3, m4a, wav, ogg, aac, flac · up to 80 MB each</small>
+        <input type="file" id="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden>
+      </label>
+      <div id="uploads"></div>
+      <p class="msg" id="upMsg"></p>
+    </section>
+
+    <section class="card">
+      <h1>Your music <span id="count" style="font-size:14px;color:#b99bab"></span></h1>
+      <p class="sub">Turn a song off to remove it from the rotation without deleting it.</p>
+      <div id="list"></div>
+      <audio id="preview" controls class="hidden"></audio>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CHUNK = 3*1024*1024, KEY='kofix-admin-token';
+  var $=function(s){return document.querySelector(s)};
+  var token=''; try{token=sessionStorage.getItem(KEY)||''}catch(e){}
+  function api(path,opts){
+    opts=opts||{}; opts.headers=Object.assign({},opts.headers||{}); if(token) opts.headers.Authorization='Bearer '+token;
+    return fetch('/api/music'+path,opts).then(function(r){
+      return r.json().catch(function(){return {error:'Unexpected response. Is the site deployed on Netlify with functions enabled?'}}).then(function(d){
+        if(r.status===401 && path!=='/login'){ signOut(); }
+        if(!r.ok) throw new Error(d.error||('Error '+r.status)); return d; });
+    });
+  }
+  function signOut(){ token=''; try{sessionStorage.removeItem(KEY)}catch(e){} $('#dash').classList.add('hidden'); $('#loginBox').classList.remove('hidden'); }
+  $('#logout').onclick=signOut;
+
+  $('#loginForm').onsubmit=function(e){
+    e.preventDefault(); var m=$('#loginMsg'); m.className='msg'; m.textContent='Signing in…';
+    api('/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('#pw').value})})
+      .then(function(d){ token=d.token; try{sessionStorage.setItem(KEY,token)}catch(e){} m.textContent=''; show(); })
+      .catch(function(err){ m.className='msg err'; m.textContent=err.message; });
+  };
+
+  var builtin=[];
+  function show(){
+    $('#loginBox').classList.add('hidden'); $('#dash').classList.remove('hidden'); refresh();
+  }
+  function fmt(n){ return n>1048576 ? (n/1048576).toFixed(1)+' MB' : Math.round(n/1024)+' KB'; }
+  function refresh(){
+    Promise.all([
+      api('/admin'),
+      fetch('/music/playlist.json',{cache:'no-store'}).then(function(r){return r.json()}).catch(function(){return {tracks:[]}})
+    ]).then(function(r){
+      var up=r[0].tracks, disabled=(r[0].settings&&r[0].settings.disabled)||[]; builtin=r[1].tracks||[];
+      var box=$('#list'); box.innerHTML='';
+      var rows=builtin.map(function(t){return {id:t.id,title:t.title,src:t.src,enabled:disabled.indexOf(t.id)===-1,built:true}}).concat(up.map(function(t){t.built=false;return t}));
+      $('#count').textContent='('+rows.filter(function(x){return x.enabled}).length+' playing / '+rows.length+')';
+      if(!rows.length) box.innerHTML='<p class="sub">No music yet. Upload your first song above.</p>';
+      rows.forEach(function(t){
+        var el=document.createElement('div'); el.className='track'+(t.enabled?'':' off');
+        el.innerHTML='<div class="t"><b></b><small></small></div>';
+        el.querySelector('b').textContent=t.title;
+        el.querySelector('small').textContent=(t.built?'Built-in':'Uploaded')+(t.size?' · '+fmt(t.size):'')+(t.enabled?' · in rotation':' · off');
+        var play=btn('Play','sm ghost',function(){var a=$('#preview');a.classList.remove('hidden');a.src=t.src;a.play();});
+        var tog=btn(t.enabled?'Turn off':'Turn on','sm ghost',function(){ api('/update',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:t.id,enabled:!t.enabled})}).then(refresh).catch(alertErr); });
+        el.appendChild(play); el.appendChild(tog);
+        if(!t.built){
+          el.appendChild(btn('Rename','sm ghost',function(){var n=prompt('Song name',t.title); if(n) api('/update',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:t.id,title:n})}).then(refresh).catch(alertErr);}));
+          el.appendChild(btn('Delete','sm danger',function(){ if(confirm('Delete "'+t.title+'" permanently?')) api('/'+t.id,{method:'DELETE'}).then(refresh).catch(alertErr); }));
+        }
+        box.appendChild(el);
+      });
+    }).catch(function(err){ $('#list').innerHTML='<p class="msg err">'+esc(err.message)+'</p>'; });
+  }
+  function btn(txt,cls,fn){var b=document.createElement('button');b.type='button';b.className=cls;b.textContent=txt;b.onclick=fn;return b;}
+  function alertErr(e){alert(e.message)}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  /* upload: split each file into 3 MB chunks (Netlify request limit), then finish */
+  var drop=$('#drop'), file=$('#file');
+  drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('over')});
+  drop.addEventListener('dragleave',function(){drop.classList.remove('over')});
+  drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('over');handle(e.dataTransfer.files)});
+  file.onchange=function(){handle(file.files); file.value='';};
+  var busy=false, queue=[];
+  function handle(fl){ queue=queue.concat(Array.prototype.slice.call(fl)); if(!busy) next(); }
+  function uid(){ var a=new Uint8Array(12); crypto.getRandomValues(a); return Array.prototype.map.call(a,function(x){return ('0'+x.toString(16)).slice(-2)}).join(''); }
+  function next(){
+    var f=queue.shift(); if(!f){busy=false; refresh(); return;} busy=true;
+    var row=document.createElement('div'); row.className='up'; row.innerHTML='<span></span><div class="bar"><i></i></div>';
+    var label=row.querySelector('span'), bar=row.querySelector('i'); label.textContent=f.name+' · '+fmt(f.size); $('#uploads').appendChild(row);
+    var id=uid(), total=Math.ceil(f.size/CHUNK), i=0;
+    if(!/\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|webm|mp4)$/i.test(f.name)||f.size>80*1048576){ label.textContent=f.name+' · skipped (unsupported or over 80 MB)'; label.className='err'; return next(); }
+    function sendChunk(){
+      if(i>=total){
+        return api('/finish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:id,name:f.name,title:f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' '),size:f.size})})
+          .then(function(){ bar.style.width='100%'; label.textContent=f.name+' · uploaded ✓'; label.className='ok'; next(); });
+      }
+      var blob=f.slice(i*CHUNK,(i+1)*CHUNK);
+      return api('/chunk?id='+id+'&index='+i+'&total='+total,{method:'POST',headers:{'content-type':'application/octet-stream'},body:blob})
+        .then(function(){ i++; bar.style.width=Math.round(i/total*100)+'%'; return sendChunk(); });
+    }
+    sendChunk().catch(function(err){ label.textContent=f.name+' · failed: '+err.message; label.className='err'; next(); });
+  }
+
+  if(token) show();
+})();
+</script>
+</body>
+</html>
