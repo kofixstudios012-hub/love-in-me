@@ -1,7 +1,7 @@
 /* Easy edits. Change the invented names or contact details here. */
 window.SITE = {
-  her: "Gloria",            // birthday girl (starts with G)
-  him: "Prince",            // partner (starts with P)
+  her: "Siggy Girl",       // birthday girl
+  him: "Gosway",           // partner
   phone: "+233534349054",
   phoneDisplay: "+233 53 434 9054",
   whatsappText: "Hello Kofix Photography Studio, I'd like to book a shoot.",

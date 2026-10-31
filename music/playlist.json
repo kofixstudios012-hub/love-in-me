@@ -1,5 +1,7 @@
 {"tracks":[
- {"id":"builtin-goodbyes","title":"Goodbyes","src":"/music/goodbyes.mp3"},
- {"id":"builtin-unstoppable","title":"Unstoppable","src":"/music/unstoppable.mp3"},
- {"id":"builtin-runaway","title":"Runaway","src":"/music/runaway.mp3"}
+ {"id":"builtin-golden-hour","title":"Golden Hour","src":"/music/golden-hour.mp3"},
+ {"id":"builtin-soft-rain","title":"Soft Rain","src":"/music/soft-rain.mp3"},
+ {"id":"builtin-sunday-glow","title":"Sunday Glow","src":"/music/sunday-glow.mp3"},
+ {"id":"builtin-midnight-promise","title":"Midnight Promise","src":"/music/midnight-promise.mp3"},
+ {"id":"builtin-heartbeat-waltz","title":"Heartbeat Waltz","src":"/music/heartbeat-waltz.mp3"}
 ]}

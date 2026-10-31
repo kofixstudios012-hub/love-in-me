@@ -55,10 +55,10 @@
     if (players.length) return;
     var AC = window.AudioContext || window.webkitAudioContext;
     for (var i = 0; i < 2; i++) {
-      var a = new Audio(); a.preload = 'auto'; a.setAttribute('playsinline', ''); a.crossOrigin = 'anonymous';
+      var a = new Audio(); a.preload = 'auto'; a.setAttribute('playsinline', ''); 
       players.push({ audio: a, gain: null });
     }
-    if (AC) {
+    if (false && AC) {
       try {
         ctx = new AC(); master = ctx.createGain(); master.gain.value = userMuted ? 0 : VOLUME; master.connect(ctx.destination);
         players.forEach(function (p) { var src = ctx.createMediaElementSource(p.audio); p.gain = ctx.createGain(); p.gain.gain.value = 0; src.connect(p.gain); p.gain.connect(master); });
