@@ -1,6 +1,6 @@
 /* Easy edits. Change the invented names or contact details here. */
 window.SITE = {
-  her: "Siggy Girl",       // birthday girl
+  her: "Shegigil",       // birthday girl
   him: "Gosway",           // partner
   phone: "+233534349054",
   phoneDisplay: "+233 53 434 9054",
